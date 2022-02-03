@@ -1,36 +1,37 @@
+import asyncio
 import os
-import smtplib
-from email.message import EmailMessage
 
-from dotenv import load_dotenv
+from aiokafka import AIOKafkaConsumer
+from smtp import send_email
+from utils import deserializer
 
-load_dotenv()
+# env variables
+KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'email_send')
+KAFKA_CONSUMER_GROUP = os.getenv('KAFKA_CONSUMER_GROUP', 'email_send')
+KAFKA_BOOTSTRAP_SERVERS = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+
+# global variables
+loop = asyncio.new_event_loop()
 
 
-def send_email(sent_from: str = None, to: list = None, subject: str = None, body: str = None):
-    assert sent_from
-    assert to
-    assert subject
-    assert body
+async def consume():
+    consumer = AIOKafkaConsumer(
+        KAFKA_TOPIC,
+        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
+        group_id=KAFKA_CONSUMER_GROUP,
+        value_deserializer=deserializer,
+        auto_offset_reset='earliest'
+    )
 
-    message = EmailMessage()
-    message["From"] = sent_from
-    message["To"] = ", ".join(to)
-    message["Subject"] = subject
-    message.set_content(body)
-
+    await consumer.start()
     try:
-        with smtplib.SMTP_SSL(os.getenv('HOST'), int(os.getenv('PORT'))) as server:
-            server.ehlo()
-            server.login(os.getenv('GMAIL_USERNAME'), os.getenv('GMAIL_PASSWORD'))
-            server.sendmail(sent_from, to, message.as_string())
-    except Exception as e:
-        print('Something went wrong...\n%s'.format(e))
+        # consume messages
+        async for msg in consumer:
+            # send email
+            # send_email(*msg.value)
+            print(f"Consumed msg: {msg}")
+    finally:
+        await consumer.stop()
 
 
-if __name__ == '__main__':
-    sent_from = 'Our Team'
-    to = ['test@gmail.com']
-    subject = 'OMG Super Important Message'
-    body = "Here is a simple test"
-    send_email(sent_from=sent_from, to=to, subject=subject, body=body)
+loop.run_until_complete(consume())
