@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 
 from aiokafka import AIOKafkaConsumer
@@ -19,16 +20,21 @@ async def consume():
         KAFKA_TOPIC,
         bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
         group_id=KAFKA_CONSUMER_GROUP,
-        value_deserializer=deserializer,
         auto_offset_reset='earliest'
     )
-
     await consumer.start()
     try:
         # consume messages
         async for msg in consumer:
-            # send email
-            # send_email(*msg.value)
+            try:
+                # deserialize
+                msg_value = deserializer(msg.value)
+                # send email
+                send_email(**msg_value)
+            except json.decoder.JSONDecodeError as e:
+                print(f"Bad json format:\n{e}")
+            except AssertionError:
+                print(f"Assertion error happened")
             print(f"Consumed msg: {msg}")
     finally:
         await consumer.stop()

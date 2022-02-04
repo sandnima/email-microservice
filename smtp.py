@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # env variables
-HOSTNAME = os.getenv('HOST')
+HOSTNAME = os.getenv('HOSTNAME')
 PORT = int(os.getenv('PORT'))
 GMAIL_USERNAME = os.getenv('GMAIL_USERNAME')
 GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD')
@@ -31,4 +31,4 @@ def send_email(sent_from: str = None, to: list = None, subject: str = None, body
             server.login(GMAIL_USERNAME, GMAIL_PASSWORD)
             server.sendmail(sent_from, to, message.as_string())
     except Exception as e:
-        print('Something went wrong...\n%s'.format(e))
+        print(f'Something went wrong...\n{e}')
