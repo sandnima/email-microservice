@@ -3,6 +3,7 @@ import json
 import os
 
 from aiokafka import AIOKafkaConsumer
+from aiokafka import ConsumerRecord
 from smtp import send_email
 from utils import deserializer
 
@@ -25,7 +26,7 @@ async def consume():
     await consumer.start()
     try:
         # consume messages
-        async for msg in consumer:
+        async for msg in consumer:  # type:ConsumerRecord
             try:
                 # deserialize
                 msg_value = deserializer(msg.value)
@@ -35,7 +36,7 @@ async def consume():
                 print(f"Bad json format:\n{e}")
             except AssertionError:
                 print(f"Assertion error happened")
-            print(f"Consumed msg: {msg}")
+            # print(f"Consumed msg: {msg}")
     finally:
         await consumer.stop()
 
