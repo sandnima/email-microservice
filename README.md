@@ -21,8 +21,16 @@ Create `.env` file
 ```
 Create virtual environment 
  ```
- python venv venv
+ python -m venv venv
  ```
+Activate virtual environment
+```
+# Windows
+venv\Scripts\activate.bat
+
+# Linux and MacOS 
+source venv/bin/activate
+```
 Install requirements 
  ```
  pip install -r requirements.txt
